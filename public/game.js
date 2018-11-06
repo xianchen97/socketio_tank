@@ -10,17 +10,11 @@ document.onmousemove = function(e) {
   mouse.y = e.pageY;
 };
 
-document.onclick = function(e){
+document.onclick = function(e) {
   mouse.clicked = true;
 
-  setTimeout(
-    function() {
-  
-    },
-    5000);
-}
-
-
+  setTimeout(function() {}, 5000);
+};
 
 //Listen for keypress, Tanks only go left and right.
 document.addEventListener("keypress", function(event) {
@@ -32,6 +26,7 @@ document.addEventListener("keypress", function(event) {
       movement.key_code = 100;
       break;
   }
+  console.log("keyPress");
 });
 
 document.addEventListener("keyup", function(event) {
@@ -47,7 +42,7 @@ let mouse = {
   x: 0,
   y: 0,
   angle: 0,
-  clicked: true,
+  clicked: true
 };
 
 let tank = function(x, y) {
@@ -56,19 +51,35 @@ let tank = function(x, y) {
   context.fill();
 };
 
+let renderText = function(lives, top) {
+  context.font = "30px Arial";
+  if (top) {
+    context.fillText("Lives left:" + lives, 600, 50);
+  } else {
+    context.fillText("Lives left:" + lives, 600, 500);
+  }
+};
 
-let angle = function(tankX, tankY, mouseX, mouseY){
-  return(90 + (Math.atan2(tankY - mouseY, tankX - mouseX) * 180 / Math.PI));
+let validateHit = function(firstPlayer_x, secondPlayer_x){
+  if((firstPlayer_x - secondPlayer_x) <= 20 && (firstPlayer_x - secondPlayer_x) >= -20 ){
 
+    console.log("HIT :" + firstPlayer_x + " ---" + secondPlayer_x)
+    return true;
+  }
+  console.log("NOT HIT :" + firstPlayer_x + " ---" + secondPlayer_x)
 
+  return false;
 }
+
+let angle = function(tankX, tankY, mouseX, mouseY) {
+  return 90 + (Math.atan2(tankY - mouseY, tankX - mouseX) * 180) / Math.PI;
+};
 
 //Constantly update player movement unique to each socket.
 socket.emit("new player");
 setInterval(function() {
   socket.emit("movement", movement);
 }, 1000 / 60);
-
 
 //Game State
 socket.on("state", function(players) {
@@ -86,45 +97,65 @@ socket.on("state", function(players) {
     context.strokeStyle = "#a00";
     context.lineWidth = Math.random() * 2;
     context.beginPath();
-    if(player.top){
-    context.moveTo(player.x+20, player.y+10)
-    context.lineTo(player.x+20, 100);
-    context.stroke();
-    context.globalCompositeOperation = "source-over";
+    if (player.top) {
+      context.moveTo(player.x + 20, player.y + 10);
+      context.lineTo(player.x + 20, 100);
+      context.stroke();
+      context.globalCompositeOperation = "source-over";
     }
-    if(mouse.clicked){
-      console.log(socket.id);
-      console.log(players[Object.keys(players)[0]]);
-      if(socket.id == ([Object.keys(players)[0]])){
+    if (mouse.clicked) {
+      if (socket.id == [Object.keys(players)[0]]) {
         context.globalCompositeOperation = "lighter";
         context.strokeStyle = "#a00";
         context.lineWidth = Math.random() * 2;
         context.beginPath();
-        context.moveTo(players[Object.keys(players)[0]].x+20, players[Object.keys(players)[0]].y+10)
-        context.lineTo(players[Object.keys(players)[0]].x+20, players[Object.keys(players)[0]].y + 600);
-        console.log(socket.id)
+        context.moveTo(
+          players[Object.keys(players)[0]].x + 20,
+          players[Object.keys(players)[0]].y + 10
+        );
+        context.lineTo(
+          players[Object.keys(players)[0]].x + 20,
+          players[Object.keys(players)[0]].y + 600
+        );
+        context.stroke();
+        context.globalCompositeOperation = "source-over";
+        if((players[Object.keys(players)[1]] != null) && (players[Object.keys(players)[0]] != null)){
+          player_0 = players[Object.keys(players)[0]].x;
+          player_1 = players[Object.keys(players)[1]].x;
+          if(validateHit(player_0, player_1)){
+            players[Object.keys(players)[1]].lives--;
+          };
+        }
+      }
+      if (socket.id == [Object.keys(players)[1]]) {
+        context.globalCompositeOperation = "lighter";
+        context.strokeStyle = "#a00";
+        context.lineWidth = Math.random() * 2;
+        context.beginPath();
+        context.moveTo(
+          players[Object.keys(players)[1]].x + 20,
+          players[Object.keys(players)[1]].y - 600
+        );
+        context.lineTo(
+          players[Object.keys(players)[1]].x + 20,
+          players[Object.keys(players)[1]].y + 10
+        );
         context.stroke();
         context.globalCompositeOperation = "source-over";
       }
-      if(socket.id == ([Object.keys(players)[1]])){
-
-        console.log(players);
-        context.globalCompositeOperation = "lighter";
-        context.strokeStyle = "#a00";
-        context.lineWidth = Math.random() * 2;
-        context.beginPath();
-        context.moveTo(players[Object.keys(players)[1]].x+20, players[Object.keys(players)[1]].y- 600)
-        context.lineTo(players[Object.keys(players)[1]].x+20, players[Object.keys(players)[1]].y + 10);
-        console.log(socket.id)
-        context.stroke();
-        context.globalCompositeOperation = "source-over";
+      if((players[Object.keys(players)[1]] != null) && (players[Object.keys(players)[0]] != null)){
+        player_0 = players[Object.keys(players)[0]].x;
+        player_1 = players[Object.keys(players)[1]].x;
+        if(validateHit(player_1, player_0)){
+          players[Object.keys(players)[0]].lives--;
+        };
       }
       mouse.clicked = false;
     }
+    renderText(player.lives, player.firstPlayer);
+
   }
 });
-
-
 
 let lookAt = {
   calc: function(x, y, lookX, lookY) {

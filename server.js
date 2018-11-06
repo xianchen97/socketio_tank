@@ -19,7 +19,7 @@ server.listen(5000, function() {
   console.log("Starting server on port 5000");
 });
 
-let players = {};
+var players = {};
 let allClients = [];
 io.on("connection", function(socket) {
   socket.on("disconnect", function() {
@@ -27,7 +27,12 @@ io.on("connection", function(socket) {
     var i = allClients.indexOf(socket);
     allClients.splice(i, 1);
     console.log(players[socket.id])
+    if(players[socket.id] != null){
+      x = players[socket.id]
+      firstPlayer = x.firstPlayer
+    }
     delete players[socket.id];
+    maxPlayers--;
   });
 
   socket.on("new player", function() {
@@ -35,6 +40,8 @@ io.on("connection", function(socket) {
       players[socket.id] = {
         x: 300,
         y: 0,
+        firstPlayer: true,
+        lives: 3,
       };
       firstPlayer = false;
       maxPlayers++;
@@ -42,14 +49,16 @@ io.on("connection", function(socket) {
     } else if (!firstPlayer && (maxPlayers <= 2)) {
       players[socket.id] = {
         x: 300,
-        y: 575
+        y: 575,
+        firstPlayer: false,
+        lives: 3,
       };
       console.log('second player')
       firstPlayer = true;
       maxPlayers++;
     }
     else{
-      console.log
+      console.log("fuckkkk");
     }
   });
 
@@ -81,3 +90,10 @@ io.on("connection", function(socket) {
 setInterval(function() {
   io.sockets.emit("state", players);
 }, 1000 / 60);
+
+setInterval(function() {
+  io.sockets.emit("lives", players);
+}, 1000);
+
+
+
