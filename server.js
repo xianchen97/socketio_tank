@@ -34,7 +34,7 @@ io.on("connection", function(socket) {
     if (firstPlayer && (maxPlayers <= 2)) {
       players[socket.id] = {
         x: 300,
-        y: 0
+        y: 0,
       };
       firstPlayer = false;
       maxPlayers++;
